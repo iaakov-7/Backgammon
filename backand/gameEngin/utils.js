@@ -36,3 +36,10 @@ export function checkHome(board, currentPlayer) {
   }
   return isHome;
 }
+
+export function endTurn(gameState) {
+  gameState.status = "waiting-for-roll";
+  gameState.currentPlayer =
+    gameState.currentPlayer === "white" ? "black" : "white";
+  gameState.dice = [];
+}

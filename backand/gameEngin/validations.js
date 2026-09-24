@@ -2,7 +2,7 @@ import { calculateDestination, checkHome, getBarDestination } from "./utils.js";
 
 export function validateMove(gameState, from, to, die) {
   if (gameState.status !== "waiting-for-move")
-    return "Stauts not equal to waiting-for-move";
+    return "Status not equal to waiting-for-move";
 
   if (!gameState.remainingDice.includes(die))
     return "Die is not in remining dice";

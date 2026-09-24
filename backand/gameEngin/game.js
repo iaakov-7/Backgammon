@@ -1,6 +1,6 @@
-import { createInitialBoard } from "./board";
-import { rollingDice } from "./utils";
-import { validateMove } from "./validations";
+import { createInitialBoard } from "./board.js";
+import { rollingDice } from "./utils.js";
+import { validateMove } from "./validations.js";
 
 const gameState = {
   board: createInitialBoard(),
@@ -9,13 +9,13 @@ const gameState = {
   remainingDice: [],
   bar: { white: 0, black: 0 },
   borneOff: { white: 0, black: 0 },
-  status: "waiting-for-roll", // waiting-for-roll | waiting-for-move | finished
+  status: "waiting-for-roll",
   winner: null,
 };
 
-function gameStart() {
+export function gameStart(gameState) {
   if (gameState.status !== "waiting-for-roll") {
-    return { success: false, message: "stauts not equal to waiting-for-roll" };
+    return { success: false, message: "status not equal to waiting-for-roll" };
   }
   let die1 = rollingDice();
   let die2 = rollingDice();
@@ -31,7 +31,7 @@ function gameStart() {
   gameState.status = "waiting-for-move";
 }
 
-function gameRole() {
+function gameRoll(gameState) {
   const die1 = rollingDice();
   const die2 = rollingDice();
   gameState.dice = [die1, die2];
@@ -40,15 +40,45 @@ function gameRole() {
   gameState.status = "waiting-for-move";
 }
 
-function gameMove(from, to, die) {
-  const error = validateMove(gameState);
+export function gameMove(gameState, from, to, die) {
+  const error = validateMove(gameState, from, to, die);
   if (error) {
     return {
       success: false,
       error,
     };
   }
-  if (from === "bar"){
-    
+  const currentPlayer = gameState.currentPlayer;
+  const enemy = currentPlayer === "white" ? "black" : "white";
+  if (from === "bar") {
+    gameState.bar[currentPlayer]--;
+  } else {
+    gameState.board[from].checkers--;
+    if (gameState.board[from].checkers === 0) {
+      gameState.board[from].owner = null;
+    }
+  }
+  if (to === "off") {
+    gameState.borneOff[currentPlayer]++;
+  } else {
+    if (
+      gameState.board[to].owner === enemy &&
+      gameState.board[to].checkers === 1
+    ) {
+      gameState.bar[enemy]++;
+      gameState.board[to].owner = currentPlayer;
+    } else {
+      gameState.board[to].owner = currentPlayer;
+      gameState.board[to].checkers++;
+    }
+  }
+  if (gameState.borneOff[currentPlayer] === 15) {
+    gameState.status = "finished";
+    return { success: true, message: `${currentPlayer} is the winer` };
+  }
+  const indexDie = gameState.remainingDice.indexOf(die);
+  gameState.remainingDice.splice(indexDie, 1);
+  if (gameState.remainingDice.length === 0) {
+    endTurn(gameState);
   }
 }
