@@ -2,7 +2,7 @@ import { createInitialBoard } from "./board.js";
 import { rollingDice } from "./utils.js";
 import { validateMove } from "./validations.js";
 
-const gameState = {
+export const gameState = {
   board: createInitialBoard(),
   currentPlayer: "white",
   dice: [],
