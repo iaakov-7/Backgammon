@@ -43,7 +43,7 @@ io.on("connection", (socket) => {
     if (validationError) {
       return callback({
         success: false,
-        error: validations,
+        error: validationError,
       });
     }
     room.players.push({

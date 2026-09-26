@@ -13,7 +13,7 @@ export const CreatingGame = () => {
       console.log(response);
       if (response.success) {
         nanigate("/waiting", {
-          state: { room: response.room, yourColor: response.yourColor },
+          state: { room: response.room, yourColor: response.yourColor,owner:true },
         });
       } else {
         setErrorMessage(response.error?.message);
