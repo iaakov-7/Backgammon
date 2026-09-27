@@ -2,7 +2,8 @@ import http from "http";
 import { Server } from "socket.io";
 import { createRoom } from "./service.js";
 import { gameState } from "./gameEngin/game.js";
-import { validateJoinRoom } from "./serverValidations.js";
+import { validateJoinRoom, validateStartGame } from "./serverValidations.js";
+import { error } from "console";
 
 const server = http.createServer();
 const io = new Server(server, {
@@ -64,6 +65,28 @@ io.on("connection", (socket) => {
       room: publikRoom,
       yourColor: "black",
     });
+    io.to(room.id).emit("room:state", { room: publikRoom });
+  });
+  socket.on("game:start", (callback) => {
+    const room = rooms.find((r) =>
+      r.players.some((p) => p.socketId === socket.id),
+    );
+    const validationError = validateStartGame(room,socket);
+    if (validationError) {
+      return callback({
+        success: false,
+        error: validationError,
+      });
+    }
+    room.status = "playing";
+    callback({
+      success: true,
+    });
+    const publikRoom = {
+      status: room.status,
+      players: room.players.map((p) => ({ name: p.name, color: p.color })),
+      game: room.game,
+    };
     io.to(room.id).emit("room:state", { room: publikRoom });
   });
 });

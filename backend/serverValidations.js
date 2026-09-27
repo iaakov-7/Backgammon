@@ -1,4 +1,4 @@
-export function validateJoinRoom(name,room,socket) {
+export function validateJoinRoom(name, room, socket) {
   if (!name || typeof name !== "string" || name.trim() === "") {
     return { code: "invalid_name", message: "player name illegal" };
   }
@@ -20,6 +20,22 @@ export function validateJoinRoom(name,room,socket) {
     return {
       code: "alredy in room",
       message: "Socket id is already in room",
+    };
+  }
+  return null;
+}
+
+export function validateStartGame(room, socket) {
+  if (!room) {
+    return { code: "room_not_found", message: "Room do not exists" };
+  }
+  if (room.status !== "waiting") {
+    return { code: "invalid_status", message: "Room not waiting" };
+  }
+  if (room.ownerSocketId !== socket.id) {
+    return {
+      code: "invalid_owner",
+      message: "Only the owner can starting the game",
     };
   }
   return null;
