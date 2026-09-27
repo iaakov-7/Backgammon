@@ -3,7 +3,6 @@ import { Server } from "socket.io";
 import { createRoom } from "./service.js";
 import { gameState } from "./gameEngin/game.js";
 import { validateJoinRoom, validateStartGame } from "./serverValidations.js";
-import { error } from "console";
 
 const server = http.createServer();
 const io = new Server(server, {
@@ -13,6 +12,25 @@ const io = new Server(server, {
 });
 
 const rooms = [];
+
+function handlePlyerLeave(socket, reason) {
+  const room = rooms.find((r) =>
+    r.players.some((p) => p.socketId === socket.id),
+  );
+  if (!room) {
+    console.log("not found");
+    return;
+  }
+  const otherPlayer = room.players.find((p) => p.socketId !== socket.id);
+  if (otherPlayer) {
+    io.to(otherPlayer.socketId).emit("room:closed", {
+      reason: reason,
+    });
+  }
+  io.in(room.id).socketsLeave(room.id);
+  const roomIndex = rooms.findIndex((r) => r.id === room.id);
+  rooms.splice(roomIndex, 1);
+}
 
 io.on("connection", (socket) => {
   socket.on("room:create", ({ name }, callback) => {
@@ -71,7 +89,7 @@ io.on("connection", (socket) => {
     const room = rooms.find((r) =>
       r.players.some((p) => p.socketId === socket.id),
     );
-    const validationError = validateStartGame(room,socket);
+    const validationError = validateStartGame(room, socket);
     if (validationError) {
       return callback({
         success: false,
@@ -88,6 +106,15 @@ io.on("connection", (socket) => {
       game: room.game,
     };
     io.to(room.id).emit("room:state", { room: publikRoom });
+  });
+  socket.on("room:leave", (callback) => {
+    handlePlyerLeave(socket, "player_left");
+    callback({
+      success: true,
+    });
+  });
+  socket.on("disconnect", () => {
+    handlePlyerLeave(socket, "player_disconnected");
   });
 });
 
